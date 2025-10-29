@@ -1,0 +1,13 @@
+# Python
+.venv/
+__pycache__/
+
+# IDE
+.idea/
+
+# Generated files
+timetable_*.png
+timetable_*.pdf
+
+# Streamlit
+.streamlit/
