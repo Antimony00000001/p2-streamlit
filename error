@@ -1,0 +1,7 @@
+KeyError: 'gen_file'
+Traceback:
+File "D:\web-projects\p2-streamlit\main.py", line 4, in <module>
+    from gen_file import generate_timetable_image
+File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+File "<frozen importlib._bootstrap>", line 946, in _load_unlocked

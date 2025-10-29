@@ -64,15 +64,15 @@ STYLES = {
 # =========== 3. 示例数据 (Sample Data) ===========
 # Requirement 5: 提供一份课程示例数据，用于直接生成课表。
 sample_courses = [
-    ("高等数学", 1, "8:00", "9:40", "教A-101"),
-    ("Python编程实践", 1, "14:00", "16:30", "实验楼302"),
-    ("大学英语", 2, "10:00", "11:40", "文科楼203"),
-    ("线性代数", 3, "8:00", "9:40", "教A-101"),
-    ("数据结构与算法", 3, "14:00", "16:30", "实验楼304"),
-    ("体育（网球）", 4, "15:00", "16:40", "体育馆"),
-    ("操作系统原理", 5, "10:00", "12:30", "实验楼501"),
-    ("电影鉴赏", 5, "19:00", "20:40", "艺术楼放映厅"),
-    ("周末自习", 6, "9:00", "17:00", "图书馆"),
+    ("高等数学", 1, "8:00", "9:40", "教A-101", 0),
+    ("Python编程实践", 1, "14:00", "16:30", "实验楼302", 0),
+    ("大学英语", 2, "10:00", "11:40", "文科楼203", 0),
+    ("线性代数", 3, "8:00", "9:40", "教A-101", 0),
+    ("数据结构与算法", 3, "14:00", "16:30", "实验楼304", 0),
+    ("体育（网球）", 4, "15:00", "16:40", "体育馆", 0),
+    ("操作系统原理", 5, "10:00", "12:30", "实验楼501", 0),
+    ("电影鉴赏", 5, "19:00", "20:40", "艺术楼放映厅", 0),
+    ("周末自习", 6, "9:00", "17:00", "图书馆", 0),
 ]
 
 
@@ -119,7 +119,7 @@ def get_text_size(draw, text, font):
 
 # =========== 5. 主生成函数 (Main Generator Function) ===========
 
-def generate_timetable_image(courses=sample_courses, selected_style='fresh', generate_png=True, generate_pdf=True):
+def generate_timetable_image(courses=sample_courses, selected_style='fresh', generate_png=True, generate_pdf=True, week_date_range=""):
     """整合所有元素，生成最终的课表图片。"""
     style = STYLES[selected_style]
     # 步骤 1: 创建背景
@@ -133,9 +133,10 @@ def generate_timetable_image(courses=sample_courses, selected_style='fresh', gen
         font_bold = ImageFont.truetype(style['font_bold_path'], 22)
         font_course = ImageFont.truetype(style['font_path'], 14)
         font_course_bold = ImageFont.truetype(style['font_bold_path'], 16)
+        font_date_range = ImageFont.truetype(style['font_bold_path'], 18) # New font for date range
     except IOError:
         print(f"提示: 字体文件未找到! 请将 '{style['font_path']}' 等字体文件放置在脚本目录。将使用默认字体。")
-        font_regular, font_bold, font_course, font_course_bold = [ImageFont.load_default()] * 4
+        font_regular, font_bold, font_course, font_course_bold, font_date_range = [ImageFont.load_default()] * 5
 
     # 步骤 3: 绘制时间表网格和坐标轴
     grid_x_start = PADDING + LEFT_AXIS_WIDTH
@@ -145,10 +146,15 @@ def generate_timetable_image(courses=sample_courses, selected_style='fresh', gen
     col_width = grid_width / len(DAYS)
     row_height = grid_height / len(TIME_SLOTS)
 
+    # Draw week date range
+    if week_date_range:
+        text_w, text_h = get_text_size(draw, week_date_range, font_date_range)
+        draw.text(((IMG_WIDTH - text_w) / 2, PADDING + 10), week_date_range, fill=style['font_color'], font=font_date_range)
+
     for i, day in enumerate(DAYS):
         text_w, text_h = get_text_size(draw, day, font_bold)
         x = grid_x_start + i * col_width + (col_width - text_w) / 2
-        y = PADDING + (HEADER_HEIGHT - text_h) / 2
+        y = PADDING + (HEADER_HEIGHT - text_h) / 2 + 30 # Adjust Y to make space for date range
         draw.text((x, y), day, fill=style['font_color'], font=font_bold)
 
     for i, time in enumerate(TIME_SLOTS):
@@ -163,7 +169,7 @@ def generate_timetable_image(courses=sample_courses, selected_style='fresh', gen
     random.shuffle(color_palette)
 
     for course_data in courses:
-        course_name, day_index, start_time, end_time, location = course_data
+        course_name, day_index, start_time, end_time, location, _ = course_data
 
         # 为每门课分配一个颜色
         if course_name not in course_colors:

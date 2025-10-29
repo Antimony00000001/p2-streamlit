@@ -8,10 +8,25 @@ from datetime import time, timedelta, datetime
 # --- App Configuration ---
 st.set_page_config(page_title="Timetable Generator", layout="wide")
 
-# --- Session State Initialization ---
 if 'courses_df' not in st.session_state:
     from gen_file import sample_courses
-    st.session_state.courses_df = pd.DataFrame(sample_courses, columns=["Course", "Day", "Start", "End", "Location"])
+    st.session_state.courses_df = pd.DataFrame(sample_courses, columns=["Course", "Day", "Start", "End", "Location", "Week Offset"])
+
+# Ensure 'Week Offset' column exists for backward compatibility or new sessions
+if 'Week Offset' not in st.session_state.courses_df.columns:
+    st.session_state.courses_df['Week Offset'] = 0
+
+if 'current_week_offset' not in st.session_state:
+    st.session_state.current_week_offset = 0 # 0 for current week, 1 for next week, -1 for previous week
+
+# --- Helper Functions ---
+def get_current_week_dates(week_offset):
+    today = datetime.today()
+    # Find the most recent Monday (or today if today is Monday)
+    start_of_week = today - timedelta(days=today.weekday())
+    current_monday = start_of_week + timedelta(weeks=week_offset)
+    current_sunday = current_monday + timedelta(days=6)
+    return current_monday, current_sunday
 
 # --- Sidebar ---
 with st.sidebar:
@@ -57,7 +72,7 @@ with st.sidebar:
                 end_time_str = end_datetime.strftime("%H:%M")
                 start_time_str = start_time_obj.strftime("%H:%M")
 
-                new_course = pd.DataFrame([[course_name, day, start_time_str, end_time_str, location]], columns=["Course", "Day", "Start", "End", "Location"])
+                new_course = pd.DataFrame([[course_name, day, start_time_str, end_time_str, location, st.session_state.current_week_offset]], columns=["Course", "Day", "Start", "End", "Location", "Week Offset"])
                 st.session_state.courses_df = pd.concat([st.session_state.courses_df, new_course], ignore_index=True)
                 st.success("Course added successfully!")
             else:
@@ -66,20 +81,43 @@ with st.sidebar:
 # --- Main Section ---
 st.title("Timetable Preview")
 
+# Week Navigation
+col1, col2, col3 = st.columns([1, 2, 1])
+with col1:
+    if st.button("Previous Week"):
+        st.session_state.current_week_offset -= 1
+        st.rerun()
+with col2:
+    current_monday, current_sunday = get_current_week_dates(st.session_state.current_week_offset)
+    st.subheader(f"Week: {current_monday.strftime('%Y-%m-%d')} to {current_sunday.strftime('%Y-%m-%d')}")
+with col3:
+    if st.button("Next Week"):
+        st.session_state.current_week_offset += 1
+        st.rerun()
+
 # Display and edit current courses
 st.header("Current Courses")
-edited_df = st.data_editor(st.session_state.courses_df, use_container_width=True, num_rows="dynamic")
+
+# Filter courses for the current week offset
+current_week_courses_df = st.session_state.courses_df[st.session_state.courses_df['Week Offset'] == st.session_state.current_week_offset]
+
+edited_df = st.data_editor(current_week_courses_df, use_container_width=True, num_rows="dynamic")
 
 # Update session state if the dataframe is edited
-if not edited_df.equals(st.session_state.courses_df):
-    st.session_state.courses_df = edited_df
+if not edited_df.equals(current_week_courses_df):
+    # Merge changes back into the main courses_df
+    st.session_state.courses_df = pd.concat([
+        st.session_state.courses_df[st.session_state.courses_df['Week Offset'] != st.session_state.current_week_offset],
+        edited_df
+    ], ignore_index=True)
     st.rerun()
 
 # Generate and display the timetable
-if not st.session_state.courses_df.empty:
-    courses_list = [tuple(row) for row in st.session_state.courses_df.to_numpy()]
+if not current_week_courses_df.empty:
+    courses_list = [tuple(row) for row in current_week_courses_df.to_numpy()]
     
-    final_img = generate_timetable_image(courses=courses_list, selected_style=selected_style)
+    current_monday, current_sunday = get_current_week_dates(st.session_state.current_week_offset)
+    final_img = generate_timetable_image(courses=courses_list, selected_style=selected_style, week_date_range=f"{current_monday.strftime('%Y-%m-%d')} to {current_sunday.strftime('%Y-%m-%d')}")
 
     st.header("Generated Timetable")
     st.image(final_img)
@@ -109,4 +147,8 @@ if not st.session_state.courses_df.empty:
             mime="application/octet-stream"
         )
 else:
-    st.warning("No courses to display. Please add a course using the sidebar.")
+    st.header("Generated Timetable")
+    current_monday, current_sunday = get_current_week_dates(st.session_state.current_week_offset)
+    empty_img = generate_timetable_image(courses=[], selected_style=selected_style, week_date_range=f"{current_monday.strftime('%Y-%m-%d')} to {current_sunday.strftime('%Y-%m-%d')}")
+    st.image(empty_img)
+    st.warning("No courses to display for this week. Please add a course using the sidebar.")
