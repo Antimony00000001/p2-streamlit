@@ -2,26 +2,25 @@ import random
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import os
 
-# 获取脚本所在目录
+# Get script directory
 script_dir = os.path.dirname(__file__)
 font_dir = os.path.join(script_dir, 'font')
 
-# =========== 1. 全局配置 (Global Configuration) ===========
-# 图片尺寸
+# =========== 1. Global Configuration ===========# Image dimensions
 IMG_WIDTH = 1200
 IMG_HEIGHT = 1800
 PADDING = 50
 
-# 布局尺寸
+# Layout dimensions
 HEADER_HEIGHT = 80
 LEFT_AXIS_WIDTH = 60
 
-# 时间表定义
-DAYS = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
-TIME_SLOTS = [f"{i}:00" for i in range(8, 22)]  # 时间范围：早8点至晚9点
+# Timetable definition
+DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+TIME_SLOTS = [f"{i}:00" for i in range(8, 22)]  # Time range: 8 AM to 9 PM
 
-# --- Requirement 4: 风格可选 ---
-# 你可以在这里选择一种预设的风格: 'modern', 'cute', 'cool', 'fresh'
+# --- Requirement 4: Style Options ---
+# You can choose a preset style here: 'modern', 'cute', 'cool', 'fresh'
 STYLES = {
     'modern': {
         'bg_colors': ('#F0F2F5', '#E6E9EE'),
@@ -61,25 +60,23 @@ STYLES = {
     }
 }
 
-# =========== 3. 示例数据 (Sample Data) ===========
-# Requirement 5: 提供一份课程示例数据，用于直接生成课表。
+# =========== 3. Sample Data ===========# Requirement 5: Provide sample course data to directly generate the timetable.
 sample_courses = [
-    ("高等数学", 1, "8:00", "9:40", "教A-101", 0),
-    ("Python编程实践", 1, "14:00", "16:30", "实验楼302", 0),
-    ("大学英语", 2, "10:00", "11:40", "文科楼203", 0),
-    ("线性代数", 3, "8:00", "9:40", "教A-101", 0),
-    ("数据结构与算法", 3, "14:00", "16:30", "实验楼304", 0),
-    ("体育（网球）", 4, "15:00", "16:40", "体育馆", 0),
-    ("操作系统原理", 5, "10:00", "12:30", "实验楼501", 0),
-    ("电影鉴赏", 5, "19:00", "20:40", "艺术楼放映厅", 0),
-    ("周末自习", 6, "9:00", "17:00", "图书馆", 0),
+    ("Advanced Mathematics", 1, "8:00", "9:40", "Classroom A-101", 0),
+    ("Python Programming Practice", 1, "14:00", "16:30", "Lab Building 302", 0),
+    ("College English", 2, "10:00", "11:40", "Liberal Arts Building 203", 0),
+    ("Linear Algebra", 3, "8:00", "9:40", "Classroom A-101", 0),
+    ("Data Structures and Algorithms", 3, "14:00", "16:30", "Lab Building 304", 0),
+    ("Physical Education (Tennis)", 4, "15:00", "16:40", "Gymnasium", 0),
+    ("Operating System Principles", 5, "10:00", "12:30", "Lab Building 501", 0),
+    ("Film Appreciation", 5, "19:00", "20:40", "Art Building Screening Room", 0),
+    ("Weekend Self-Study", 6, "9:00", "17:00", "Library", 0),
 ]
 
 
-# =========== 4. 辅助绘图函数 (Helper Functions) ===========
-
+# =========== 4. Helper Functions ===========
 def create_background(width, height, colors):
-    """Requirement 1: 创建一个细腻的渐变背景，不喧宾夺主。"""
+    """Requirement 1: Create a delicate gradient background that doesn't overpower the content."""
     base = Image.new('RGB', (width, height), colors[0])
     top = Image.new('RGB', (width, height), colors[1])
     mask = Image.new('L', (width, height))
@@ -90,44 +87,43 @@ def create_background(width, height, colors):
 
 
 def draw_3d_effect_shadow(base_image, xy, radius):
-    """Requirement 6: 通过绘制一个柔和模糊的阴影来增加立体效果。"""
+    """Requirement 6: Add a 3D effect by drawing a soft, blurred shadow."""
     x1, y1, x2, y2 = [int(v) for v in xy]
     offset = 10
-    blur_radius = 8  # 阴影模糊度
-    shadow_color = (0, 0, 0, 40)  # 使用半透明黑色作为通用阴影色
+    blur_radius = 8  # Shadow blur radius
+    shadow_color = (0, 0, 0, 40)  # Use semi-transparent black as a general shadow color
 
-    # 在一个独立的透明图层上绘制阴影，以进行模糊处理
+    # Draw shadow on a separate transparent layer for blurring
     shadow_canvas = Image.new('RGBA', base_image.size, (0, 0, 0, 0))
     shadow_draw = ImageDraw.Draw(shadow_canvas)
     shadow_draw.rounded_rectangle((x1, y1 + offset, x2, y2 + offset), radius=radius, fill=shadow_color)
 
-    # 使用高斯模糊创建柔和的阴影边缘
+    # Use Gaussian blur to create soft shadow edges
     shadow_canvas = shadow_canvas.filter(ImageFilter.GaussianBlur(radius=blur_radius))
 
-    # 将模糊后的阴影合成到主图片上
+    # Composite the blurred shadow onto the main image
     base_image.paste(shadow_canvas, (0, 0), shadow_canvas)
 
 
 def get_text_size(draw, text, font):
-    """精确计算文本尺寸的辅助函数。"""
+    """Helper function to accurately calculate text size."""
     if hasattr(draw, 'textbbox'):
         bbox = draw.textbbox((0, 0), text, font=font)
         return bbox[2] - bbox[0], bbox[3] - bbox[1]
-    else:  # 兼容旧版Pillow
+    else:  # Compatible with older Pillow versions
         return draw.textsize(text, font=font)
 
 
-# =========== 5. 主生成函数 (Main Generator Function) ===========
-
+# =========== 5. Main Generator Function ===========
 def generate_timetable_image(courses=sample_courses, selected_style='fresh', generate_png=True, generate_pdf=True, week_date_range=""):
-    """整合所有元素，生成最终的课表图片。"""
+    """Integrate all elements to generate the final timetable image."""
     style = STYLES[selected_style]
-    # 步骤 1: 创建背景
+    # Step 1: Create background
     base_bg = create_background(IMG_WIDTH, IMG_HEIGHT, style['bg_colors'])
-    img = base_bg.convert('RGBA')  # 转换为RGBA模式以处理带透明度的阴影
+    img = base_bg.convert('RGBA')  # Convert to RGBA mode to handle shadows with transparency
     draw = ImageDraw.Draw(img)
 
-    # 步骤 2: 加载字体
+    # Step 2: Load fonts
     try:
         font_regular = ImageFont.truetype(style['font_path'], 16)
         font_bold = ImageFont.truetype(style['font_bold_path'], 22)
@@ -135,10 +131,10 @@ def generate_timetable_image(courses=sample_courses, selected_style='fresh', gen
         font_course_bold = ImageFont.truetype(style['font_bold_path'], 16)
         font_date_range = ImageFont.truetype(style['font_bold_path'], 18) # New font for date range
     except IOError:
-        print(f"提示: 字体文件未找到! 请将 '{style['font_path']}' 等字体文件放置在脚本目录。将使用默认字体。")
+        print(f"Tip: Font file not found! Please place font files like '{style['font_path']}' in the script directory. Default font will be used.")
         font_regular, font_bold, font_course, font_course_bold, font_date_range = [ImageFont.load_default()] * 5
 
-    # 步骤 3: 绘制时间表网格和坐标轴
+    # Step 3: Draw timetable grid and axes
     grid_x_start = PADDING + LEFT_AXIS_WIDTH
     grid_y_start = PADDING + HEADER_HEIGHT
     grid_width = IMG_WIDTH - grid_x_start - PADDING
@@ -163,7 +159,7 @@ def generate_timetable_image(courses=sample_courses, selected_style='fresh', gen
         draw.text((grid_x_start - text_w - 15, y - 8), time, fill=style['font_color'], font=font_regular)
         draw.line([(grid_x_start - 5, y), (grid_x_start + grid_width, y)], fill=style['line_color'], width=1)
 
-    # 步骤 4: 绘制所有课程
+    # Step 4: Draw all courses
     course_colors = {}
     color_palette = style['palette']
     random.shuffle(color_palette)
@@ -171,11 +167,11 @@ def generate_timetable_image(courses=sample_courses, selected_style='fresh', gen
     for course_data in courses:
         course_name, day_index, start_time, end_time, location, _ = course_data
 
-        # 为每门课分配一个颜色
+        # Assign a color to each course
         if course_name not in course_colors:
             course_colors[course_name] = color_palette[len(course_colors) % len(color_palette)]
 
-        # 计算课程块的位置和尺寸
+        # Calculate course block position and size
         day_col = day_index - 1
         start_h, start_m = map(int, start_time.split(':'))
         end_h, end_m = map(int, end_time.split(':'))
@@ -184,12 +180,12 @@ def generate_timetable_image(courses=sample_courses, selected_style='fresh', gen
         x1, y1 = grid_x_start + day_col * col_width + 8, grid_y_start + start_row * row_height + 4
         x2, y2 = grid_x_start + (day_col + 1) * col_width - 8, grid_y_start + end_row * row_height - 4
 
-        # 核心绘制步骤:
-        # a. 先画阴影，实现立体效果 (Requirement 6)
+        # Core drawing steps:
+        # a. Draw shadow first for 3D effect (Requirement 6)
         draw_3d_effect_shadow(img, (x1, y1, x2, y2), radius=15)
-        # b. 再画圆角课程块 (Requirement 2 & 3)
+        # b. Then draw rounded course blocks (Requirement 2 & 3)
         draw.rounded_rectangle((x1, y1, x2, y2), radius=15, fill=course_colors[course_name])
-        # c. 最后画上课程文字
+        # c. Finally, draw course text
         text_y_pos = y1 + 10
         text_color = style['text_on_course_color']
 
@@ -197,7 +193,7 @@ def generate_timetable_image(courses=sample_courses, selected_style='fresh', gen
         draw.text((x1 + (x2 - x1 - text_w) / 2, text_y_pos), course_name, fill=text_color, font=font_course_bold)
         text_y_pos += text_h + 5
 
-        location_text = f"@{location}"
+        location_text = f"@{location}" if location else ""
         text_w, text_h = get_text_size(draw, location_text, font_course)
         draw.text((x1 + (x2 - x1 - text_w) / 2, text_y_pos), location_text, fill=text_color, font=font_course)
 
@@ -206,6 +202,5 @@ def generate_timetable_image(courses=sample_courses, selected_style='fresh', gen
     return final_img
 
 
-# =========== 6. 脚本入口 (Script Entry Point) ===========
-if __name__ == '__main__':
+# =========== 6. Script Entry Point ===========if __name__ == '__main__':
     generate_timetable_image()

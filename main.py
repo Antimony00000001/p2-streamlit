@@ -45,7 +45,7 @@ with st.sidebar:
         if course_selection == add_new_option:
             new_course_name = st.text_input("Enter New Course Name")
 
-        day = st.selectbox("Day of the Week", options=list(range(1, 8)), format_func=lambda x: f"周{x}")
+        day = st.selectbox("Day of the Week", options=list(range(1, 8)), format_func=lambda x: f"Day {x}")
         
         # Time Inputs
         start_time_obj = st.slider(
