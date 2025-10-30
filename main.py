@@ -127,22 +127,22 @@ if not current_week_courses_df.empty:
     pdf_buffer.seek(0)
 
     # Header and download buttons in one row
-    header_col, download_col1, download_col2 = st.columns([0.7, 0.15, 0.15])
-    with header_col:
-        st.header("Generated Timetable")
+    download_col1, download_col2 = st.columns(2)
     with download_col1:
         st.download_button(
             label="Download PNG",
             data=png_buffer,
             file_name=f"timetable_{selected_style}.png",
-            mime="image/png"
+            mime="image/png",
+            use_container_width=True
         )
     with download_col2:
         st.download_button(
             label="Download PDF",
             data=pdf_buffer,
             file_name=f"timetable_{selected_style}.pdf",
-            mime="application/octet-stream"
+            mime="application/octet-stream",
+            use_container_width=True
         )
     st.image(final_img)
     with st.expander("Edit Courses Data"):
@@ -168,22 +168,22 @@ else:
     empty_img.save(pdf_buffer, format="PDF")
     pdf_buffer.seek(0)
 
-    header_col, download_col1, download_col2 = st.columns([0.7, 0.15, 0.15])
-    with header_col:
-        st.header("Generated Timetable")
+    download_col1, download_col2 = st.columns(2)
     with download_col1:
         st.download_button(
             label="Download PNG",
             data=png_buffer,
             file_name=f"timetable_{selected_style}.png",
-            mime="image/png"
+            mime="image/png",
+            use_container_width=True
         )
     with download_col2:
         st.download_button(
             label="Download PDF",
             data=pdf_buffer,
             file_name=f"timetable_{selected_style}.pdf",
-            mime="application/octet-stream"
+            mime="application/octet-stream",
+            use_container_width=True
         )
     st.image(empty_img)
     st.warning("No courses to display for this week. Please add a course using the sidebar.")
