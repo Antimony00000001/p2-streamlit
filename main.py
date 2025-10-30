@@ -37,13 +37,7 @@ with st.sidebar:
     st.header("Add a New Course")
     with st.form("new_course_form", clear_on_submit=True):
         # Course Name Input
-        unique_courses = st.session_state.courses_df['Course'].unique().tolist()
-        add_new_option = "--- Add New Course ---"
-        course_selection = st.selectbox("Course Name", [add_new_option] + unique_courses)
-        
-        new_course_name = ""
-        if course_selection == add_new_option:
-            new_course_name = st.text_input("Enter New Course Name")
+        course_name = st.text_input("Course Name", value="Maths")
 
         day = st.selectbox("Day of the Week", options=list(range(1, 8)), format_func=lambda x: f"Day {x}")
         
@@ -60,21 +54,35 @@ with st.sidebar:
         duration_hours = st.selectbox("Duration", [0.5, 1.0, 1.5, 2.0], format_func=lambda x: f"{x} hours")
 
         location = st.text_input("Location (Optional)")
+        recursion_type = st.selectbox("Recursion", ["None", "Daily", "Weekly"], index=0)
         
         submitted = st.form_submit_button("Add Course")
         if submitted:
-            course_name = new_course_name if course_selection == add_new_option else course_selection
-            
             if course_name and day and start_time_obj and duration_hours:
-                # Calculate end time
                 start_datetime = datetime.combine(datetime.today(), start_time_obj)
                 end_datetime = start_datetime + timedelta(hours=duration_hours)
                 end_time_str = end_datetime.strftime("%H:%M")
                 start_time_str = start_time_obj.strftime("%H:%M")
 
-                new_course = pd.DataFrame([[course_name, day, start_time_str, end_time_str, location, st.session_state.current_week_offset]], columns=["Course", "Day", "Start", "End", "Location", "Week Offset"])
-                st.session_state.courses_df = pd.concat([st.session_state.courses_df, new_course], ignore_index=True)
-                st.success("Course added successfully!")
+                courses_to_add = []
+
+                if recursion_type == "None":
+                    courses_to_add.append([course_name, day, start_time_str, end_time_str, location, st.session_state.current_week_offset])
+                elif recursion_type == "Daily":
+                    for i in range(7): # Add for 7 days
+                        # Day 1 is the selected day, then day+1, day+2, etc.
+                        # Need to handle wrapping around to the next week (day 7 -> day 1 of next week)
+                        # Streamlit's day is 1-7, so (day + i - 1) % 7 + 1
+                        daily_day = (day + i - 1) % 7 + 1
+                        courses_to_add.append([course_name, daily_day, start_time_str, end_time_str, location, st.session_state.current_week_offset])
+                elif recursion_type == "Weekly":
+                    for i in range(4): # Add for 4 weeks
+                        courses_to_add.append([course_name, day, start_time_str, end_time_str, location, st.session_state.current_week_offset + i])
+                
+                if courses_to_add:
+                    new_courses_df = pd.DataFrame(courses_to_add, columns=["Course", "Day", "Start", "End", "Location", "Week Offset"])
+                    st.session_state.courses_df = pd.concat([st.session_state.courses_df, new_courses_df], ignore_index=True)
+                    st.success(f"{len(courses_to_add)} Course(s) added successfully!")
             else:
                 st.error("Please fill in all required fields.")
 
