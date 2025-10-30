@@ -90,17 +90,17 @@ with st.sidebar:
 st.title("Timetable Preview")
 
 # Week Navigation
-col1, col2, col3 = st.columns([1, 2, 1])
-with col1:
-    if st.button("Previous Week"):
+week_nav_cols = st.columns([1, 3, 1])
+with week_nav_cols[0]:
+    if st.button("Previous Week", use_container_width=True):
         if st.session_state.current_week_offset > 0:
             st.session_state.current_week_offset -= 1
             st.rerun()
-with col2:
+with week_nav_cols[1]:
     current_monday, current_sunday = get_current_week_dates(st.session_state.current_week_offset)
-    st.subheader(f"Week: {current_monday.strftime('%m-%d')} to {current_sunday.strftime('%m-%d')}")
-with col3:
-    if st.button("Next Week"):
+    st.markdown(f"<h3 style='text-align: center;'>Week: {current_monday.strftime('%m-%d')} to {current_sunday.strftime('%m-%d')}</h3>", unsafe_allow_html=True)
+with week_nav_cols[2]:
+    if st.button("Next Week", use_container_width=True):
         if st.session_state.current_week_offset < 7: # 0 to 7 makes 8 weeks
             st.session_state.current_week_offset += 1
             st.rerun()
@@ -117,11 +117,6 @@ if not current_week_courses_df.empty:
     current_monday, current_sunday = get_current_week_dates(st.session_state.current_week_offset)
     final_img = generate_timetable_image(courses=courses_list, selected_style=selected_style, week_date_range=f"{current_monday.strftime('%m-%d')} to {current_sunday.strftime('%m-%d')}")
 
-    st.header("Generated Timetable")
-    st.image(final_img)
-
-
-
     # In-memory files for download
     png_buffer = io.BytesIO()
     final_img.save(png_buffer, format="PNG")
@@ -131,21 +126,25 @@ if not current_week_courses_df.empty:
     final_img.save(pdf_buffer, format="PDF")
     pdf_buffer.seek(0)
 
-    col1, col2 = st.columns(2)
-    with col1:
+    # Header and download buttons in one row
+    header_col, download_col1, download_col2 = st.columns([0.7, 0.15, 0.15])
+    with header_col:
+        st.header("Generated Timetable")
+    with download_col1:
         st.download_button(
-            label="Download PNG Image",
+            label="Download PNG",
             data=png_buffer,
             file_name=f"timetable_{selected_style}.png",
             mime="image/png"
         )
-    with col2:
+    with download_col2:
         st.download_button(
             label="Download PDF",
             data=pdf_buffer,
             file_name=f"timetable_{selected_style}.pdf",
             mime="application/octet-stream"
         )
+    st.image(final_img)
     with st.expander("Edit Courses Data"):
         st.header("Current Courses Data")
         edited_df = st.data_editor(current_week_courses_df, use_container_width=True, num_rows="dynamic")
@@ -157,8 +156,34 @@ if not current_week_courses_df.empty:
             ], ignore_index=True)
             st.rerun()
 else:
-    st.header("Generated Timetable")
     current_monday, current_sunday = get_current_week_dates(st.session_state.current_week_offset)
     empty_img = generate_timetable_image(courses=[], selected_style=selected_style, week_date_range=f"{current_monday.strftime('%m-%d')} to {current_sunday.strftime('%m-%d')}")
+
+    # In-memory files for download (for empty timetable)
+    png_buffer = io.BytesIO()
+    empty_img.save(png_buffer, format="PNG")
+    png_buffer.seek(0)
+
+    pdf_buffer = io.BytesIO()
+    empty_img.save(pdf_buffer, format="PDF")
+    pdf_buffer.seek(0)
+
+    header_col, download_col1, download_col2 = st.columns([0.7, 0.15, 0.15])
+    with header_col:
+        st.header("Generated Timetable")
+    with download_col1:
+        st.download_button(
+            label="Download PNG",
+            data=png_buffer,
+            file_name=f"timetable_{selected_style}.png",
+            mime="image/png"
+        )
+    with download_col2:
+        st.download_button(
+            label="Download PDF",
+            data=pdf_buffer,
+            file_name=f"timetable_{selected_style}.pdf",
+            mime="application/octet-stream"
+        )
     st.image(empty_img)
     st.warning("No courses to display for this week. Please add a course using the sidebar.")

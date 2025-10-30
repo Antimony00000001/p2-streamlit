@@ -113,6 +113,52 @@ def get_text_size(draw, text, font):
     else:  # Compatible with older Pillow versions
         return draw.textsize(text, font=font)
 
+def wrap_text(draw, text, font, max_width):
+    """Helper function to wrap text based on max_width."""
+    lines = []
+    if not text: return lines
+
+    # Handle Chinese characters: split by character if it's a single word that exceeds max_width
+    # For simplicity, we'll assume words are separated by spaces for English, and for Chinese,
+    # we'll try to fit as many characters as possible.
+    words = text.split(' ')
+    current_line = []
+
+    for word in words:
+        # Check if adding the next word (plus a space if it's not the first word) exceeds max_width
+        test_line = ' '.join(current_line + [word])
+        test_width, _ = get_text_size(draw, test_line, font)
+
+        if test_width <= max_width:
+            current_line.append(word)
+        else:
+            # If current_line is not empty, add it to lines and start a new line with the current word
+            if current_line:
+                lines.append(' '.join(current_line))
+            current_line = [word]
+
+            # If even a single word exceeds max_width, try to break it down (e.g., for long Chinese words or very long English words)
+            word_width, _ = get_text_size(draw, word, font)
+            if word_width > max_width:
+                sub_word_line = []
+                for char in word:
+                    test_sub_word_line = ''.join(sub_word_line + [char])
+                    test_sub_word_width, _ = get_text_size(draw, test_sub_word_line, font)
+                    if test_sub_word_width <= max_width:
+                        sub_word_line.append(char)
+                    else:
+                        if sub_word_line:
+                            lines.append(''.join(sub_word_line))
+                        sub_word_line = [char]
+                if sub_word_line:
+                    lines.append(''.join(sub_word_line))
+                current_line = [] # Reset current_line as the word was fully processed
+
+    if current_line:
+        lines.append(' '.join(current_line))
+
+    return lines
+
 
 # =========== 5. Main Generator Function ===========
 def generate_timetable_image(courses=sample_courses, selected_style='fresh', generate_png=True, generate_pdf=True, week_date_range=""):
@@ -132,16 +178,16 @@ def generate_timetable_image(courses=sample_courses, selected_style='fresh', gen
 
     if style['font_path']:
         try:
-            font_regular = ImageFont.truetype(style['font_path'], 16)
-            font_course = ImageFont.truetype(style['font_path'], 14)
+            font_regular = ImageFont.truetype(style['font_path'], 28)
+            font_course = ImageFont.truetype(style['font_path'], 24)
         except IOError:
             print(f"Tip: Font file not found! Please place font files like '{style['font_path']}' in the script directory. Default font will be used.")
     
     if style['font_bold_path']:
         try:
-            font_bold = ImageFont.truetype(style['font_bold_path'], 22)
-            font_course_bold = ImageFont.truetype(style['font_bold_path'], 16)
-            font_date_range = ImageFont.truetype(style['font_bold_path'], 18) # New font for date range
+            font_bold = ImageFont.truetype(style['font_bold_path'], 40)
+            font_course_bold = ImageFont.truetype(style['font_bold_path'], 30)
+            font_date_range = ImageFont.truetype(style['font_bold_path'], 32) # New font for date range
         except IOError:
             print(f"Tip: Font file not found! Please place font files like '{style['font_bold_path']}' in the script directory. Default font will be used.")
 
@@ -173,7 +219,6 @@ def generate_timetable_image(courses=sample_courses, selected_style='fresh', gen
     # Step 4: Draw all courses
     course_colors = {}
     color_palette = style['palette']
-    random.shuffle(color_palette)
 
     for course_data in courses:
         course_name, day_index, start_time, end_time, location, _ = course_data
@@ -199,14 +244,22 @@ def generate_timetable_image(courses=sample_courses, selected_style='fresh', gen
         # c. Finally, draw course text
         text_y_pos = y1 + 10
         text_color = style['text_on_course_color']
+        max_text_width = int(x2 - x1 - 16) # 8 pixels padding on each side
 
-        text_w, text_h = get_text_size(draw, course_name, font_course_bold)
-        draw.text((x1 + (x2 - x1 - text_w) / 2, text_y_pos), course_name, fill=text_color, font=font_course_bold)
-        text_y_pos += text_h + 5
+        # Draw wrapped course name
+        wrapped_course_name = wrap_text(draw, course_name, font_course_bold, max_text_width)
+        for line in wrapped_course_name:
+            text_w, text_h = get_text_size(draw, line, font_course_bold)
+            draw.text((x1 + (max_text_width + 16 - text_w) / 2, text_y_pos), line, fill=text_color, font=font_course_bold)
+            text_y_pos += text_h + 2 # Add a small line spacing
 
+        # Draw wrapped location text
         location_text = f"@{location}" if location else ""
-        text_w, text_h = get_text_size(draw, location_text, font_course)
-        draw.text((x1 + (x2 - x1 - text_w) / 2, text_y_pos), location_text, fill=text_color, font=font_course)
+        wrapped_location_text = wrap_text(draw, location_text, font_course, max_text_width)
+        for line in wrapped_location_text:
+            text_w, text_h = get_text_size(draw, line, font_course)
+            draw.text((x1 + (max_text_width + 16 - text_w) / 2, text_y_pos), line, fill=text_color, font=font_course)
+            text_y_pos += text_h + 2 # Add a small line spacing
 
     final_img = img.convert('RGB')
 

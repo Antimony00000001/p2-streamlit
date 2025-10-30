@@ -1,9 +1,6 @@
-KeyError: 'palette'
-Traceback:
+Script execution error
 
-File "D:\web-projects\p2-streamlit\main.py", line 120, in <module>
-    final_img = generate_timetable_image(courses=courses_list, selected_style=selected_style, week_date_range=f"{current_monday.strftime('%Y-%m-%d')} to {current_sunday.strftime('%Y-%m-%d')}")
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-File "D:\web-projects\p2-streamlit\gen_file.py", line 173, in generate_timetable_image
-    color_palette = style['palette']
-                    ~~~~~^^^^^^^^^^^
+File "D:\web-projects\p2-streamlit\main.py", line 159
+  else:
+  ^
+IndentationError: expected an indented block after 'else' statement on line 158
