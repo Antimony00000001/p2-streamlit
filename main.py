@@ -89,7 +89,7 @@ with col1:
         st.rerun()
 with col2:
     current_monday, current_sunday = get_current_week_dates(st.session_state.current_week_offset)
-    st.subheader(f"Week: {current_monday.strftime('%Y-%m-%d')} to {current_sunday.strftime('%Y-%m-%d')}")
+    st.subheader(f"Week: {current_monday.strftime('%m-%d')} to {current_sunday.strftime('%m-%d')}")
 with col3:
     if st.button("Next Week"):
         st.session_state.current_week_offset += 1
@@ -105,10 +105,12 @@ if not current_week_courses_df.empty:
     courses_list = [tuple(row) for row in current_week_courses_df.to_numpy()]
     
     current_monday, current_sunday = get_current_week_dates(st.session_state.current_week_offset)
-    final_img = generate_timetable_image(courses=courses_list, selected_style=selected_style, week_date_range=f"{current_monday.strftime('%Y-%m-%d')} to {current_sunday.strftime('%Y-%m-%d')}")
+    final_img = generate_timetable_image(courses=courses_list, selected_style=selected_style, week_date_range=f"{current_monday.strftime('%m-%d')} to {current_sunday.strftime('%m-%d')}")
 
     st.header("Generated Timetable")
     st.image(final_img)
+
+
 
     # In-memory files for download
     png_buffer = io.BytesIO()
@@ -134,9 +136,19 @@ if not current_week_courses_df.empty:
             file_name=f"timetable_{selected_style}.pdf",
             mime="application/octet-stream"
         )
+    with st.expander("Edit Courses Data"):
+        st.header("Current Courses Data")
+        edited_df = st.data_editor(current_week_courses_df, use_container_width=True, num_rows="dynamic")
+
+        if not edited_df.equals(current_week_courses_df):
+            st.session_state.courses_df = pd.concat([
+                st.session_state.courses_df[st.session_state.courses_df['Week Offset'] != st.session_state.current_week_offset],
+                edited_df
+            ], ignore_index=True)
+            st.rerun()
 else:
     st.header("Generated Timetable")
     current_monday, current_sunday = get_current_week_dates(st.session_state.current_week_offset)
-    empty_img = generate_timetable_image(courses=[], selected_style=selected_style, week_date_range=f"{current_monday.strftime('%Y-%m-%d')} to {current_sunday.strftime('%Y-%m-%d')}")
+    empty_img = generate_timetable_image(courses=[], selected_style=selected_style, week_date_range=f"{current_monday.strftime('%m-%d')} to {current_sunday.strftime('%m-%d')}")
     st.image(empty_img)
     st.warning("No courses to display for this week. Please add a course using the sidebar.")
