@@ -89,6 +89,29 @@ with st.sidebar:
 # --- Main Section ---
 st.title("Timetable Preview")
 
+# Initialize buffers for download buttons
+png_buffer = io.BytesIO()
+pdf_buffer = io.BytesIO()
+
+# Header and download buttons in one row
+download_col1, download_col2 = st.columns(2)
+with download_col1:
+    st.download_button(
+        label="Download PNG",
+        data=png_buffer,
+        file_name=f"timetable_{selected_style}.png",
+        mime="image/png",
+        use_container_width=True
+    )
+with download_col2:
+    st.download_button(
+        label="Download PDF",
+        data=pdf_buffer,
+        file_name=f"timetable_{selected_style}.pdf",
+        mime="application/octet-stream",
+        use_container_width=True
+    )
+
 # Week Navigation
 week_nav_cols = st.columns([1, 3, 1])
 with week_nav_cols[0]:
@@ -118,32 +141,16 @@ if not current_week_courses_df.empty:
     final_img = generate_timetable_image(courses=courses_list, selected_style=selected_style, week_date_range=f"{current_monday.strftime('%m-%d')} to {current_sunday.strftime('%m-%d')}")
 
     # In-memory files for download
-    png_buffer = io.BytesIO()
+    png_buffer.seek(0) # Reset buffer position
+    png_buffer.truncate(0) # Clear previous content
     final_img.save(png_buffer, format="PNG")
     png_buffer.seek(0)
 
-    pdf_buffer = io.BytesIO()
+    pdf_buffer.seek(0) # Reset buffer position
+    pdf_buffer.truncate(0) # Clear previous content
     final_img.save(pdf_buffer, format="PDF")
     pdf_buffer.seek(0)
 
-    # Header and download buttons in one row
-    download_col1, download_col2 = st.columns(2)
-    with download_col1:
-        st.download_button(
-            label="Download PNG",
-            data=png_buffer,
-            file_name=f"timetable_{selected_style}.png",
-            mime="image/png",
-            use_container_width=True
-        )
-    with download_col2:
-        st.download_button(
-            label="Download PDF",
-            data=pdf_buffer,
-            file_name=f"timetable_{selected_style}.pdf",
-            mime="application/octet-stream",
-            use_container_width=True
-        )
     st.image(final_img)
     with st.expander("Edit Courses Data"):
         st.header("Current Courses Data")
@@ -160,30 +167,15 @@ else:
     empty_img = generate_timetable_image(courses=[], selected_style=selected_style, week_date_range=f"{current_monday.strftime('%m-%d')} to {current_sunday.strftime('%m-%d')}")
 
     # In-memory files for download (for empty timetable)
-    png_buffer = io.BytesIO()
+    png_buffer.seek(0) # Reset buffer position
+    png_buffer.truncate(0) # Clear previous content
     empty_img.save(png_buffer, format="PNG")
     png_buffer.seek(0)
 
-    pdf_buffer = io.BytesIO()
+    pdf_buffer.seek(0) # Reset buffer position
+    pdf_buffer.truncate(0) # Clear previous content
     empty_img.save(pdf_buffer, format="PDF")
     pdf_buffer.seek(0)
 
-    download_col1, download_col2 = st.columns(2)
-    with download_col1:
-        st.download_button(
-            label="Download PNG",
-            data=png_buffer,
-            file_name=f"timetable_{selected_style}.png",
-            mime="image/png",
-            use_container_width=True
-        )
-    with download_col2:
-        st.download_button(
-            label="Download PDF",
-            data=pdf_buffer,
-            file_name=f"timetable_{selected_style}.pdf",
-            mime="application/octet-stream",
-            use_container_width=True
-        )
     st.image(empty_img)
     st.warning("No courses to display for this week. Please add a course using the sidebar.")
