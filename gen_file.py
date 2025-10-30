@@ -28,8 +28,8 @@ STYLES = {
         'font_color': '#333740',
         'text_on_course_color': '#2D3436',
         'palette': ['#D4E2F4', '#F4D9D4', '#D4F4E2', '#F4F1D4', '#E2D4F4', '#D4F4F1'],
-        'font_path': os.path.join(font_dir, 'MaShanZheng-Regular.ttf'),
-        'font_bold_path': os.path.join(font_dir, 'MaShanZheng-Regular.ttf'),
+        'font_path': None,
+        'font_bold_path': None,
     },
     'cute': {
         'bg_colors': ('#FFF0F5', '#F8E9EE'),
@@ -37,8 +37,8 @@ STYLES = {
         'font_color': '#D66D93',
         'text_on_course_color': '#6B2D3F',
         'palette': ['#FFC3D9', '#C3E1FF', '#C3FFD9', '#FFFDC3', '#E1C3FF', '#C3F8FF'],
-        'font_path': os.path.join(font_dir, 'MaShanZheng-Regular.ttf'),
-        'font_bold_path': os.path.join(font_dir, 'MaShanZheng-Regular.ttf'),
+        'font_path': None,
+        'font_bold_path': None,
     },
     'cool': {
         'bg_colors': ('#282C34', '#21252B'),
@@ -46,8 +46,8 @@ STYLES = {
         'font_color': '#ABB2BF',
         'text_on_course_color': '#FFFFFF',
         'palette': ['#61AFEF', '#E06C75', '#98C379', '#E5C07B', '#C678DD', '#56B6C2'],
-        'font_path': os.path.join(font_dir, 'MaShanZheng-Regular.ttf'),
-        'font_bold_path': os.path.join(font_dir, 'MaShanZheng-Regular.ttf'),
+        'font_path': None,
+        'font_bold_path': None,
     },
     'fresh': {
         'bg_colors': ('#F3F9FB', '#E8F3F6'),
@@ -55,8 +55,8 @@ STYLES = {
         'font_color': '#3E667A',
         'text_on_course_color': '#0B4F6C',
         'palette': ['#A8DADC', '#F191A2', '#83D4A3', '#FADF98', '#B3B8E3', '#98DFF0'],
-        'font_path': os.path.join(font_dir, 'MaShanZheng-Regular.ttf'),
-        'font_bold_path': os.path.join(font_dir, 'MaShanZheng-Regular.ttf'),
+        'font_path': None,
+        'font_bold_path': None,
     }
 }
 
@@ -124,15 +124,26 @@ def generate_timetable_image(courses=sample_courses, selected_style='fresh', gen
     draw = ImageDraw.Draw(img)
 
     # Step 2: Load fonts
-    try:
-        font_regular = ImageFont.truetype(style['font_path'], 16)
-        font_bold = ImageFont.truetype(style['font_bold_path'], 22)
-        font_course = ImageFont.truetype(style['font_path'], 14)
-        font_course_bold = ImageFont.truetype(style['font_bold_path'], 16)
-        font_date_range = ImageFont.truetype(style['font_bold_path'], 18) # New font for date range
-    except IOError:
-        print(f"Tip: Font file not found! Please place font files like '{style['font_path']}' in the script directory. Default font will be used.")
-        font_regular, font_bold, font_course, font_course_bold, font_date_range = [ImageFont.load_default()] * 5
+    font_regular = ImageFont.load_default()
+    font_bold = ImageFont.load_default()
+    font_course = ImageFont.load_default()
+    font_course_bold = ImageFont.load_default()
+    font_date_range = ImageFont.load_default()
+
+    if style['font_path']:
+        try:
+            font_regular = ImageFont.truetype(style['font_path'], 16)
+            font_course = ImageFont.truetype(style['font_path'], 14)
+        except IOError:
+            print(f"Tip: Font file not found! Please place font files like '{style['font_path']}' in the script directory. Default font will be used.")
+    
+    if style['font_bold_path']:
+        try:
+            font_bold = ImageFont.truetype(style['font_bold_path'], 22)
+            font_course_bold = ImageFont.truetype(style['font_bold_path'], 16)
+            font_date_range = ImageFont.truetype(style['font_bold_path'], 18) # New font for date range
+        except IOError:
+            print(f"Tip: Font file not found! Please place font files like '{style['font_bold_path']}' in the script directory. Default font will be used.")
 
     # Step 3: Draw timetable grid and axes
     grid_x_start = PADDING + LEFT_AXIS_WIDTH

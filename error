@@ -1,7 +1,9 @@
-KeyError: 'gen_file'
+KeyError: 'palette'
 Traceback:
-File "D:\web-projects\p2-streamlit\main.py", line 4, in <module>
-    from gen_file import generate_timetable_image
-File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
-File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
-File "<frozen importlib._bootstrap>", line 946, in _load_unlocked
+
+File "D:\web-projects\p2-streamlit\main.py", line 120, in <module>
+    final_img = generate_timetable_image(courses=courses_list, selected_style=selected_style, week_date_range=f"{current_monday.strftime('%Y-%m-%d')} to {current_sunday.strftime('%Y-%m-%d')}")
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "D:\web-projects\p2-streamlit\gen_file.py", line 173, in generate_timetable_image
+    color_palette = style['palette']
+                    ~~~~~^^^^^^^^^^^
