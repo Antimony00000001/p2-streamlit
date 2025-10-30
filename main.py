@@ -76,7 +76,7 @@ with st.sidebar:
                         daily_day = (day + i - 1) % 7 + 1
                         courses_to_add.append([course_name, daily_day, start_time_str, end_time_str, location, st.session_state.current_week_offset])
                 elif recursion_type == "Weekly":
-                    for i in range(4): # Add for 4 weeks
+                    for i in range(8): # Add for 8 weeks (0 to 7)
                         courses_to_add.append([course_name, day, start_time_str, end_time_str, location, st.session_state.current_week_offset + i])
                 
                 if courses_to_add:
@@ -93,15 +93,17 @@ st.title("Timetable Preview")
 col1, col2, col3 = st.columns([1, 2, 1])
 with col1:
     if st.button("Previous Week"):
-        st.session_state.current_week_offset -= 1
-        st.rerun()
+        if st.session_state.current_week_offset > 0:
+            st.session_state.current_week_offset -= 1
+            st.rerun()
 with col2:
     current_monday, current_sunday = get_current_week_dates(st.session_state.current_week_offset)
     st.subheader(f"Week: {current_monday.strftime('%m-%d')} to {current_sunday.strftime('%m-%d')}")
 with col3:
     if st.button("Next Week"):
-        st.session_state.current_week_offset += 1
-        st.rerun()
+        if st.session_state.current_week_offset < 7: # 0 to 7 makes 8 weeks
+            st.session_state.current_week_offset += 1
+            st.rerun()
 
 # Display and edit current courses
 # Filter courses for the current week offset
