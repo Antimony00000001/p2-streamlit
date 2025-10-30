@@ -96,21 +96,9 @@ with col3:
         st.rerun()
 
 # Display and edit current courses
-st.header("Current Courses")
-
 # Filter courses for the current week offset
 current_week_courses_df = st.session_state.courses_df[st.session_state.courses_df['Week Offset'] == st.session_state.current_week_offset]
 
-edited_df = st.data_editor(current_week_courses_df, use_container_width=True, num_rows="dynamic")
-
-# Update session state if the dataframe is edited
-if not edited_df.equals(current_week_courses_df):
-    # Merge changes back into the main courses_df
-    st.session_state.courses_df = pd.concat([
-        st.session_state.courses_df[st.session_state.courses_df['Week Offset'] != st.session_state.current_week_offset],
-        edited_df
-    ], ignore_index=True)
-    st.rerun()
 
 # Generate and display the timetable
 if not current_week_courses_df.empty:
