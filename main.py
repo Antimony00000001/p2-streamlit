@@ -30,13 +30,11 @@ def get_current_week_dates(week_offset):
 
 # --- Sidebar ---
 with st.sidebar:
-    st.header("Timetable Controls")
-
-    selected_style = st.selectbox("Choose a style", ["modern", "cute", "cool", "fresh"])
-
+    st.info("Use the form below to add new courses to your timetable.")
     st.header("Add a New Course")
     with st.form("new_course_form", clear_on_submit=True):
-        # Course Name Input
+        submitted = st.form_submit_button("Add Course")
+
         course_name = st.text_input("Course Name", value="Maths")
 
         day = st.selectbox("Day of the Week", options=list(range(1, 8)), format_func=lambda x: f"Day {x}")
@@ -56,7 +54,6 @@ with st.sidebar:
         location = st.text_input("Location (Optional)")
         recursion_type = st.selectbox("Recursion", ["None", "Daily", "Weekly"], index=0)
         
-        submitted = st.form_submit_button("Add Course")
         if submitted:
             if course_name and day and start_time_obj and duration_hours:
                 start_datetime = datetime.combine(datetime.today(), start_time_obj)
@@ -85,6 +82,9 @@ with st.sidebar:
                     st.success(f"{len(courses_to_add)} Course(s) added successfully!")
             else:
                 st.error("Please fill in all required fields.")
+    
+    st.header("Timetable Controls")
+    selected_style = st.selectbox("Choose a style", ["modern", "cute", "cool", "fresh"])
 
 # --- Main Section ---
 st.title("Timetable Preview")
