@@ -1,0 +1,28 @@
+# 工作流的名称
+name: Keep Streamlit App Alive
+
+on:
+  schedule:
+    # 这是一个 cron 表达式，表示“在每天的第 5 小时 0 分钟 (UTC时间) 运行”
+    # 这足以保持应用活跃
+    - cron: '0 5 * * *'
+  
+  workflow_dispatch:
+    # 这允许你从 GitHub Actions 页面手动触发此工作流，方便测试
+
+jobs:
+  ping-app:
+    # 作业的名称
+    name: Ping Streamlit App
+    
+    # 在最新的 Ubuntu 运行器上执行
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 作业的第一个步骤
+      - name: Send HTTP Request to Streamlit App
+        
+        # --- 这是关键的改动 ---
+        # 直接在这里替换成你自己的 Streamlit URL
+        # 确保 URL 在引号 "..." 之中
+        run: curl -sSf "https://p2-app-qpf92sw5hzknrcuhsqzttn.streamlit.app/" > /dev/null
