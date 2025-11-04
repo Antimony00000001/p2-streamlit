@@ -5,7 +5,7 @@ on:
   schedule:
     # 这是一个 cron 表达式，表示“在每天的第 5 小时 0 分钟 (UTC时间) 运行”
     # 这足以保持应用活跃
-    - cron: '0 5 * * *'
+    - cron: '0 5,17 * * *'
   
   workflow_dispatch:
     # 这允许你从 GitHub Actions 页面手动触发此工作流，方便测试
